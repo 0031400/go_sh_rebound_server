@@ -20,7 +20,7 @@ func ClientWsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("disconnect from client")
 	}()
 	idStr := r.URL.Query()["id"]
-	if idStr == nil {
+	if len(idStr) == 0 {
 		log.Println("lack id params")
 		return
 	}
@@ -31,12 +31,15 @@ func ClientWsHandler(w http.ResponseWriter, r *http.Request) {
 	theNode := data.FindNode(id)
 	if theNode.Id == 0 {
 		log.Panicln("find the node fail")
-		return
 	}
 	theNode.WriteChan <- []byte{0}
 	go func() {
 		for d := range theNode.ReadChan {
-			c.WriteMessage(websocket.BinaryMessage, d)
+			err = c.WriteMessage(websocket.BinaryMessage, d)
+			if err != nil {
+				log.Println(err)
+				return
+			}
 		}
 	}()
 	go func() {

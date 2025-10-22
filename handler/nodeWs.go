@@ -16,15 +16,9 @@ func NodeWsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Panicln(err)
 	}
 	defer c.Close()
-	thisId := data.Id
-	data.Id++
+	thisId := 0
 	defer func() {
-		for i, v := range data.NodeInfos {
-			if v.Id == thisId {
-				data.NodeInfos = append(data.NodeInfos[:i], data.NodeInfos[i+1:]...)
-				break
-			}
-		}
+		data.DelNode(thisId)
 	}()
 	mt, message, err := c.ReadMessage()
 	if err != nil {
@@ -42,20 +36,17 @@ func NodeWsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("fail to handshake")
 		return
 	}
-	var node data.NodeInfo
-	node.Hostname = string(message)
-	node.Addr = c.RemoteAddr().String()
-	node.Id = thisId
-	node.C = c
-	node.ReadChan = make(chan []byte)
-	node.WriteChan = make(chan []byte)
-	node.ExitChan = make(chan struct{})
-	data.NodeInfos = append(data.NodeInfos, node)
+	node := data.AddNode(c, string(message), c.RemoteAddr().String())
+	thisId = node.Id
 	c.WriteMessage(websocket.BinaryMessage, []byte{0})
 	log.Println("link from node " + node.Addr)
 	go func() {
 		for msg := range node.WriteChan {
-			c.WriteMessage(websocket.BinaryMessage, msg)
+			err = c.WriteMessage(websocket.BinaryMessage, msg)
+			if err != nil {
+				log.Println(err)
+				return
+			}
 		}
 	}()
 	for {
