@@ -13,9 +13,12 @@ func NodeWsHandler(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{}
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Panicln(err)
+		log.Panicln("node ws upgrade fail", err)
 	}
-	defer c.Close()
+	defer func() {
+		c.Close()
+		log.Println("disconnect with node")
+	}()
 	thisId := 0
 	defer func() {
 		data.DelNode(thisId)
@@ -26,7 +29,6 @@ func NodeWsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if mt != websocket.BinaryMessage || !slices.Equal(message, []byte{0}) {
 		log.Panicln("fail to handshake")
-		return
 	}
 	mt, message, err = c.ReadMessage()
 	if err != nil {
@@ -34,12 +36,11 @@ func NodeWsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if mt != websocket.TextMessage {
 		log.Println("fail to handshake")
-		return
 	}
 	node := data.AddNode(c, string(message), c.RemoteAddr().String())
 	thisId = node.Id
 	c.WriteMessage(websocket.BinaryMessage, []byte{0})
-	log.Println("link from node " + node.Addr)
+	log.Println("connect with node " + node.Addr)
 	go func() {
 		for msg := range node.WriteChan {
 			err = c.WriteMessage(websocket.BinaryMessage, msg)

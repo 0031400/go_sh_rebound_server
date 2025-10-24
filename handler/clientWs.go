@@ -13,11 +13,11 @@ func ClientWsHandler(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{}
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Panicln("ws upgrade fail", err)
+		log.Panicln("client ws upgrade fail", err)
 	}
 	defer func() {
 		c.Close()
-		log.Println("disconnect from client")
+		log.Println("disconnect with client")
 	}()
 	idStr := r.URL.Query()["id"]
 	if len(idStr) == 0 {

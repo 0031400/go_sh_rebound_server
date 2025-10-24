@@ -15,18 +15,21 @@ func Init() {
 	addrEnv := os.Getenv("addr")
 	nodeAuthEnv := os.Getenv("nodeAuth")
 	clientAuthEnv := os.Getenv("clientAuth")
-	if addrEnv != "" {
-		*addr = "127.0.0.1:3000"
-	} else if *addr == "" {
-		*addr = "127.0.0.1:3000"
+	if *addr == "" && addrEnv == "" {
+		Addr = "127.0.0.1:3000"
+	} else if addrEnv != "" {
+		Addr = addrEnv
+	} else {
+		Addr = *addr
 	}
-	Addr = *addr
-	if nodeAuthEnv != "" {
-		*nodeAuth = nodeAuthEnv
+	if *nodeAuth == "" && nodeAuthEnv != "" {
+		NodeAuth = nodeAuthEnv
+	} else {
+		NodeAuth = *nodeAuth
 	}
-	NodeAuth = *nodeAuth
-	if clientAuthEnv != "" {
-		*clientAuth = clientAuthEnv
+	if *clientAuth == "" && clientAuthEnv != "" {
+		ClientAuth = clientAuthEnv
+	} else {
+		ClientAuth = *clientAuth
 	}
-	ClientAuth = *clientAuth
 }
