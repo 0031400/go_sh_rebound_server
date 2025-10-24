@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"go_sh_rebound_server/config"
 	"go_sh_rebound_server/data"
 	"log"
 	"net/http"
@@ -29,6 +30,10 @@ func NodeWsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if mt != websocket.BinaryMessage || !slices.Equal(message, []byte{0}) {
 		log.Panicln("fail to handshake")
+	}
+	err = c.WriteMessage(websocket.TextMessage, []byte(config.NodeAuth))
+	if err != nil {
+		log.Panicln(err)
 	}
 	mt, message, err = c.ReadMessage()
 	if err != nil {
