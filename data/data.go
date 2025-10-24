@@ -18,14 +18,16 @@ type NodeInfo struct {
 
 var mu sync.RWMutex
 var NodeInfos []NodeInfo
-var Id = 1
 
 func AddNode(c *websocket.Conn, hostname string, addr string) NodeInfo {
-	newNode := NodeInfo{Id: Id, C: c, Hostname: hostname, Addr: addr, ReadChan: make(chan []byte), WriteChan: make(chan []byte), ExitChan: make(chan struct{})}
+	id := 1
+	for FindNode(id).Id != 0 {
+		id++
+	}
+	newNode := NodeInfo{Id: id, C: c, Hostname: hostname, Addr: addr, ReadChan: make(chan []byte), WriteChan: make(chan []byte), ExitChan: make(chan struct{})}
 	mu.Lock()
 	NodeInfos = append(NodeInfos, newNode)
 	mu.Unlock()
-	Id++
 	return newNode
 }
 func FindNode(id int) NodeInfo {
