@@ -42,7 +42,7 @@ func NodeWsHandler(w http.ResponseWriter, r *http.Request) {
 	if mt != websocket.TextMessage {
 		log.Println("fail to handshake")
 	}
-	node := data.AddNode(c, string(message), c.RemoteAddr().String())
+	node := data.AddNode(c, string(message), getNodeAddr(r))
 	thisId = node.Id
 	c.WriteMessage(websocket.BinaryMessage, []byte{0})
 	log.Println("connect with node " + node.Addr)
@@ -66,5 +66,12 @@ func NodeWsHandler(w http.ResponseWriter, r *http.Request) {
 		if mt == websocket.BinaryMessage {
 			node.ReadChan <- message
 		}
+	}
+}
+func getNodeAddr(r *http.Request) string {
+	if config.IpHeader == "" || len(r.Header[config.IpHeader]) == 0 {
+		return r.RemoteAddr
+	} else {
+		return r.Header[config.IpHeader][0]
 	}
 }
